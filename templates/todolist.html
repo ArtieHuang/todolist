@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>todolist</title>
+</head>
+<body>
+<h1>todolist</h1>
+type new todos:<input type="text" id="newTodo" name="newTodo" /><input type="button" id="submit" value="submit" name="submit" />
+<br />
+<input type="button" id="clear" name="clear" value="delete the finished items">
+<br />
+<div id="div">
+</div>
+</body>
+<script>
+var newTodo = document.getElementById('newTodo')
+var submit = document.getElementById('submit')
+var clear = document.getElementById('clear')
+var div = document.getElementById('div')
+function init(){
+	if(window.XMLHttpRequest){
+		return new XMLHttpRequest()
+	}else if(window.ActiveXObject){
+		return new ActiveXObject("Microsoft.XMLHTTP");
+	}
+}
+function recieveData(){
+http = init()
+http.open('POST','/api/todolist/checkItems')
+http.onreadystatechange = function(){
+if(http.status == 200 && http.responseText){
+var resp = eval(http.responseText)
+for(var i = 0;i < resp.length;i ++){
+var item = resp[i]
+item = '<input name="todoCheckBtns" type="checkbox"><label name="todoLabels">' + item + '</label>'
+if(div.innerHTML.indexOf(item) == -1){
+div.innerHTML += item
+div.innerHTML += '<br name="newlines" />'
+}
+}
+}
+}
+http.send(null)
+}
+setInterval('recieveData()',100)
+submit.onclick = function(){
+var todo = newTodo.value
+http = init()
+http.open("POST","/api/todolist/addItem/" + todo)
+http.send(null)
+}
+clear.onclick = function(){
+var checkBtns = document.getElementsByName('todoCheckBtns')
+var labels = document.getElementsByName('todoLabels')
+var newlines = document.getElementsByName('newlines')
+if(checkBtns.length < 1){
+return
+}
+var len = checkBtns.length
+for(var i = len - 1;i >= 0;i --){
+if(checkBtns[i].checked){
+checkBtns[i].outerHTML = ""
+labels[i].outerHTML = ""
+newlines[i].outerHTML = ""
+http = init()
+
+http.open('POST','/api/todolist/delItem/' + i)
+http.send(null)
+}
+}
+}
+</script>
+</html>
